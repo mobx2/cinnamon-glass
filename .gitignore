@@ -1,0 +1,7 @@
+.DS_Store
+*.swp
+*.swo
+*~
+.dotfiles-backup/
+/dev/shm/
+__pycache__/
