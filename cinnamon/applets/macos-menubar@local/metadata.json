@@ -1,0 +1,6 @@
+{
+  "uuid": "macos-menubar@local",
+  "name": "macOS Active App Menu Bar",
+  "description": "Displays the focused application name and quick menu bar items like macOS.",
+  "max-instances": 1
+}
