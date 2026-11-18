@@ -1,0 +1,6 @@
+{
+  "uuid": "control-center@local",
+  "name": "Control Center",
+  "description": "Unified macOS / Ubuntu-style Quick Settings Control Center for Cinnamon.",
+  "max-instances": 1
+}
