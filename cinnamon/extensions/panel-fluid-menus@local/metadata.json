@@ -1,0 +1,7 @@
+{
+  "uuid": "panel-fluid-menus@local",
+  "name": "Fluid Panel Menus",
+  "description": "Allows hovering and one-click switching between panel buttons and menus without closing the active menu first.",
+  "cinnamon-version": ["5.0", "5.2", "5.4", "5.6", "5.8", "6.0", "6.2", "6.4", "6.6"],
+  "version": "1.0"
+}
