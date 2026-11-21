@@ -1,0 +1,118 @@
+* {
+    bg:          rgba(20, 22, 27, 0.93);
+    bg-alt:      rgba(255, 255, 255, 0.05);
+    bg-sel:      rgba(59, 130, 246, 0.24);
+    border-col:  rgba(255, 255, 255, 0.14);
+    accent:      #3b82f6;
+    fg:          #f8fafc;
+    fg-muted:    rgba(248, 250, 252, 0.45);
+
+    background-color: transparent;
+    text-color:       @fg;
+    font:             "Barlow Medium 12";
+}
+
+window {
+    location:         center;
+    anchor:           center;
+    y-offset:         0px;
+    width:            640px;
+    background-color: @bg;
+    border:           1px solid;
+    border-color:     @border-col;
+    border-radius:    18px;
+    padding:          0px;
+}
+
+mainbox {
+    spacing:          0px;
+    children:         [ "inputbar", "listview", "mode-switcher" ];
+}
+
+inputbar {
+    padding:          16px 20px;
+    spacing:          12px;
+    border:           0px 0px 1px 0px;
+    border-color:     rgba(255, 255, 255, 0.08);
+    children:         [ "icon-search", "entry" ];
+}
+
+icon-search {
+    expand:           false;
+    filename:         "edit-find-symbolic";
+    size:             22px;
+    vertical-align:   0.5;
+}
+
+entry {
+    placeholder:       "Spotlight Search…";
+    placeholder-color: @fg-muted;
+    font:              "Barlow Medium 15";
+    vertical-align:    0.5;
+    cursor:            text;
+}
+
+listview {
+    lines:            7;
+    columns:          1;
+    fixed-height:     false;
+    dynamic:          true;
+    scrollbar:        false;
+    spacing:          3px;
+    padding:          10px 10px 8px 10px;
+}
+
+element {
+    padding:          9px 12px;
+    spacing:          12px;
+    border-radius:    11px;
+    border:           1px solid;
+    border-color:     transparent;
+    cursor:           pointer;
+}
+
+element normal.normal,
+element alternate.normal {
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+element selected.normal,
+element selected.active {
+    background-color: @bg-sel;
+    border-color:     rgba(59, 130, 246, 0.45);
+    text-color:       #ffffff;
+}
+
+element-icon {
+    size:             30px;
+    vertical-align:   0.5;
+    cursor:           inherit;
+}
+
+element-text {
+    vertical-align:   0.5;
+    font:             "Barlow Medium 12";
+    cursor:           inherit;
+}
+
+mode-switcher {
+    padding:          8px 12px 10px 12px;
+    spacing:          6px;
+    border:           1px 0px 0px 0px;
+    border-color:     rgba(255, 255, 255, 0.06);
+}
+
+button {
+    padding:          5px 10px;
+    border-radius:    9px;
+    font:             "Barlow SemiBold 9.5";
+    text-color:       @fg-muted;
+    background-color: transparent;
+    cursor:           pointer;
+}
+
+button selected {
+    background-color: rgba(59, 130, 246, 0.22);
+    text-color:       #dbeafe;
+}
