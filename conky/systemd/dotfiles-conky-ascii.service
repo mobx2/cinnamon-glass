@@ -1,0 +1,13 @@
+[Unit]
+Description=MOBX ASCII Fetch Conky Widget
+After=graphical-session.target
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+ExecStart=/usr/bin/conky -c %h/.conky/ascii-fetch/conkyrc.conf
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target
