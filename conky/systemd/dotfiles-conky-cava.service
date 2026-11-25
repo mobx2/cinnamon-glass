@@ -1,0 +1,13 @@
+[Unit]
+Description=Center Desktop Cava Audio Visualizer
+After=graphical-session.target pipewire.service pulseaudio.service
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+ExecStart=%h/.conky/cava-bar/run.sh
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target
