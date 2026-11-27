@@ -14,6 +14,7 @@ configuration {
     me-select-entry: "";
     me-accept-entry: "MousePrimary";
     click-to-exit: true;
+    kb-cancel: "Escape,Control+g,Control+bracketleft";
     disable-history: false;
     monitor: "primary";
 }

@@ -8,9 +8,23 @@ fi
 rofi -show drun -normal-window &
 ROFI_PID=$!
 
-# Hide from dock/pager, keep above, and auto-close whenever focus leaves Rofi (including empty desktop clicks).
-# Exact centering on primary monitor is handled natively by Muffin (rounded-corners@local).
+# Hide from dock/pager, keep above, ensure focus so Escape & typing work immediately,
+# and auto-close whenever focus leaves Rofi (including empty desktop clicks).
 (
+    ROFI_WIN=""
+    # Wait up to 1.5s for Rofi window to appear and configure/focus it immediately
+    for _ in $(seq 1 50); do
+        kill -0 "$ROFI_PID" 2>/dev/null || exit 0
+        ROFI_WIN="$(wmctrl -lx 2>/dev/null | awk 'tolower($3) ~ /rofi/ {print $1; exit}')"
+        if [[ -n "$ROFI_WIN" ]]; then
+            wmctrl -i -r "$ROFI_WIN" -b add,skip_taskbar,skip_pager 2>/dev/null
+            wmctrl -i -r "$ROFI_WIN" -b add,above 2>/dev/null
+            wmctrl -i -a "$ROFI_WIN" 2>/dev/null
+            break
+        fi
+        sleep 0.03
+    done
+
     SEEN_FOCUS=0
     while kill -0 "$ROFI_PID" 2>/dev/null; do
         WIN_ID="$(xprop -root _NET_ACTIVE_WINDOW 2>/dev/null | awk '{print $NF}')"
@@ -22,12 +36,7 @@ ROFI_PID=$!
         else
             CLASS="$(xprop -id "$WIN_ID" WM_CLASS 2>/dev/null)"
             if [[ "$CLASS" == *"rofi"* || "$CLASS" == *"Rofi"* ]]; then
-                if [[ "$SEEN_FOCUS" -eq 0 ]]; then
-                    SEEN_FOCUS=1
-                    # wmctrl only accepts up to 2 properties per -b call
-                    wmctrl -i -r "$WIN_ID" -b add,skip_taskbar,skip_pager 2>/dev/null
-                    wmctrl -i -r "$WIN_ID" -b add,above 2>/dev/null
-                fi
+                SEEN_FOCUS=1
             elif [[ "$SEEN_FOCUS" -eq 1 ]]; then
                 kill "$ROFI_PID" 2>/dev/null
                 break
