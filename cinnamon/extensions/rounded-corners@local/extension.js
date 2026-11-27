@@ -208,9 +208,19 @@ function _detach(actor) {
     } catch (e) {}
 }
 
+let _origIsInteresting = null;
+
 function init() {}
 
 function enable() {
+    if (!_origIsInteresting && Main.isInteresting) {
+        _origIsInteresting = Main.isInteresting;
+        Main.isInteresting = function(metaWindow) {
+            if (_isRofi(metaWindow)) return false;
+            return _origIsInteresting.call(this, metaWindow);
+        };
+    }
+
     global.get_window_actors().forEach((actor) => _attach(actor));
 
     _wmSignals.push(
@@ -267,6 +277,11 @@ function enable() {
 }
 
 function disable() {
+    if (_origIsInteresting) {
+        Main.isInteresting = _origIsInteresting;
+        _origIsInteresting = null;
+    }
+
     for (let id of _wmSignals) {
         global.window_manager.disconnect(id);
     }
