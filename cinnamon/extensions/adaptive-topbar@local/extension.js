@@ -30,6 +30,112 @@ let _origRunAction = null;
 let _peekMinimizedWindows = [];
 let _inPeekToggle = false;
 
+// Smart Dock Intellihide (checks ALL visible windows on primary monitor against the actual centered dock pill)
+let _bottomPanel = null;
+let _origDockUpdateVisibility = null;
+
+function _findBottomPanel() {
+    if (!Main.panelManager || !Main.panelManager.panels) return null;
+    let primary = Main.layoutManager.primaryIndex;
+    for (let p of Main.panelManager.panels) {
+        if (p && p.panelPosition === Panel.PanelLoc.bottom && p.monitorIndex === primary) {
+            return p;
+        }
+    }
+    return null;
+}
+
+function _isRofiWindow(w) {
+    if (!w) return false;
+    try {
+        let cls = (w.get_wm_class() || "").toLowerCase();
+        let inst = (w.get_wm_class_instance() || "").toLowerCase();
+        return cls.indexOf("rofi") !== -1 || inst.indexOf("rofi") !== -1;
+    } catch (e) {
+        return false;
+    }
+}
+
+function _dockHasOverlappingWindow(panel) {
+    if (!panel || !panel.monitor || !panel.actor || panel.actor.is_finalized()) return false;
+    if (_isInOverviewOrExpo() || _inOverviewFade) return false;
+
+    let ws = global.workspace_manager.get_active_workspace();
+    if (!ws) return false;
+
+    let mon = panel.monitor;
+    let dockH = panel.actor.height > 0 ? panel.actor.height : 68;
+    let dockY = mon.y + mon.height - dockH;
+
+    let pillW = (panel._centerBox && !panel._centerBox.is_finalized() && panel._centerBox.width > 40)
+        ? panel._centerBox.width + 16
+        : mon.width;
+    let dockX = mon.x + Math.round((mon.width - pillW) / 2);
+
+    let windows = ws.list_windows();
+    for (let w of windows) {
+        if (!w || w.minimized) continue;
+        if (w.get_monitor() !== panel.monitorIndex) continue;
+        if (_isRofiWindow(w)) continue;
+
+        let type = w.get_window_type();
+        if (
+            type !== Meta.WindowType.NORMAL &&
+            type !== Meta.WindowType.DIALOG &&
+            type !== Meta.WindowType.MODAL_DIALOG
+        ) continue;
+
+        let actor = w.get_compositor_private();
+        if (!actor || actor.is_finalized() || !actor.visible) continue;
+
+        if (w.is_fullscreen()) return true;
+
+        let r = w.get_frame_rect();
+        if (
+            Math.max(dockX, r.x) < Math.min(dockX + pillW, r.x + r.width) &&
+            Math.max(dockY, r.y) < Math.min(dockY + dockH, r.y + r.height)
+        ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function _installSmartDockIntellihide() {
+    _bottomPanel = _findBottomPanel();
+    if (!_bottomPanel || _origDockUpdateVisibility) return;
+
+    _origDockUpdateVisibility = _bottomPanel._updatePanelVisibility;
+    _bottomPanel._updatePanelVisibility = function() {
+        if (this._autohideSettings !== "intel") {
+            return _origDockUpdateVisibility.call(this);
+        }
+
+        this._mouseEntered = this._mouseOnPanel();
+        if (this._panelEditMode || this._highlighted || this._peeking || this._panelHasOpenMenus() || this._mouseEntered) {
+            this._shouldShow = true;
+        } else {
+            this._shouldShow = !_dockHasOverlappingWindow(this);
+        }
+        this._queueShowHidePanel();
+    };
+}
+
+function _uninstallSmartDockIntellihide() {
+    if (_bottomPanel && _origDockUpdateVisibility) {
+        _bottomPanel._updatePanelVisibility = _origDockUpdateVisibility;
+        try { _bottomPanel._updatePanelVisibility(); } catch (e) {}
+    }
+    _origDockUpdateVisibility = null;
+    _bottomPanel = null;
+}
+
+function _refreshDockVisibility() {
+    if (_bottomPanel && _origDockUpdateVisibility) {
+        try { _bottomPanel._updatePanelVisibility(); } catch (e) {}
+    }
+}
+
 function _findTopPanel() {
     if (!Main.panelManager || !Main.panelManager.panels) return null;
     let primary = Main.layoutManager.primaryIndex;
@@ -169,6 +275,7 @@ function _scheduleVerify() {
         } else {
             _setTransparent(false);
         }
+        _refreshDockVisibility();
         return false;
     });
 }
@@ -180,6 +287,7 @@ function _update(instant, forceIncludeWin, excludeWin) {
     } else {
         _setTransparent(Boolean(instant));
     }
+    _refreshDockVisibility();
     if (!instant) _scheduleVerify();
 }
 
@@ -314,7 +422,8 @@ function _trackWindow(win) {
             if (_inPeekToggle) return;
             _update(false);
         }),
-        win.connect("position-changed", () => _scheduleVerify()),
+        win.connect("position-changed", () => { _refreshDockVisibility(); _scheduleVerify(); }),
+        win.connect("size-changed", () => { _refreshDockVisibility(); _scheduleVerify(); }),
         win.connect("unmanaged", () => {
             _untrackWindow(win);
             _update(false, null, win);
@@ -483,6 +592,7 @@ function enable() {
     }
 
     _installDesktopPeekAnimation();
+    _installSmartDockIntellihide();
     _update(true);
 }
 
@@ -497,6 +607,7 @@ function disable() {
         _verifyTimerId = 0;
     }
     _setConkyPaused(false);
+    _uninstallSmartDockIntellihide();
     _uninstallDesktopPeekAnimation();
 
     for (let [obj, id] of _signals) {
