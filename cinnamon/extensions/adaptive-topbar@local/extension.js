@@ -21,6 +21,8 @@ let _winSignals = new Map();
 let _isMaximizedActive = false;
 let _inOverviewFade = false;
 let _verifyTimerId = 0;
+let _initRetryId = 0;
+let _initRetries = 0;
 
 // Animated Show Desktop / Peek Desktop state (uses native minimize/unminimize!)
 let _hotCornerProto = null;
@@ -391,11 +393,25 @@ function _onOverviewOrExpoHidden() {
 function init() {}
 
 function enable() {
+    if (_initRetryId) {
+        Mainloop.source_remove(_initRetryId);
+        _initRetryId = 0;
+    }
     _topPanel = _findTopPanel();
-    if (!_topPanel || !_topPanel.actor) return;
+    if (!_topPanel || !_topPanel.actor || !_topPanel.actor.get_parent()) {
+        if (_initRetries < 15) {
+            _initRetries++;
+            _initRetryId = Mainloop.timeout_add(300, () => {
+                _initRetryId = 0;
+                enable();
+                return false;
+            });
+        }
+        return;
+    }
+    _initRetries = 0;
 
     let parent = _topPanel.actor.get_parent();
-    if (!parent) return;
 
     _container = new Clutter.Actor({
         reactive: false,
@@ -471,6 +487,11 @@ function enable() {
 }
 
 function disable() {
+    if (_initRetryId) {
+        Mainloop.source_remove(_initRetryId);
+        _initRetryId = 0;
+    }
+    _initRetries = 0;
     if (_verifyTimerId) {
         Mainloop.source_remove(_verifyTimerId);
         _verifyTimerId = 0;
