@@ -205,6 +205,7 @@ PY
     gsettings set org.cinnamon enabled-applets "['panel1:center:0:grouped-window-list@cinnamon.org:34', 'panel2:left:0:menu@cinnamon.org:32', 'panel2:left:1:macos-menubar@local:51', 'panel2:right:0:keyboard@cinnamon.org:40', 'panel2:right:1:control-center@local:50', 'panel2:right:2:calendar@cinnamon.org:45']"
     gsettings set org.cinnamon enabled-extensions "['rounded-corners@local', 'panel-fluid-menus@local', 'adaptive-topbar@local']"
     gsettings set org.cinnamon hotcorner-layout "['scale:true:0', 'scale:false:0', 'scale:false:0', 'desktop:true:0']"
+    gsettings set org.cinnamon.muffin tile-maximize true 2>/dev/null || true
     gsettings set org.nemo.desktop volumes-visible false 2>/dev/null || true
 
     gsettings set org.cinnamon.sounds notification-enabled true
